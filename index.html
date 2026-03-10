@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Studio Pro | mrpacman1977</title>
+    <!-- Fuente moderna de Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #09090b;
+            --bg-gradient: radial-gradient(circle at top right, #1f1f2e, #09090b);
+            --pacman-yellow: #FFD700;
+            --pacman-glow: rgba(255, 215, 0, 0.4);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --error-color: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg-dark);
+            background-image: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Mejor para móviles */
+            padding: 20px 15px;
+            overflow-x: hidden;
+        }
+
+        /* Notificaciones flotantes (Toasts) */
+        #toast {
+            position: fixed;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 20, 25, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 1000;
+            transition: top 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: max-content;
+            max-width: 90vw;
+        }
+
+        .container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .logo-art {
+            font-size: 2.2rem;
+            color: var(--pacman-yellow);
+            text-shadow: 0 0 20px var(--pacman-glow);
+            letter-spacing: 5px;
+            margin-bottom: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #fff, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 300;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="password"], textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="password"]:focus, textarea:focus {
+            border-color: var(--pacman-yellow);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        textarea {
+            resize: none; /* Desactivado para no romper en móvil */
+            height: 120px;
+            line-height: 1.5;
+        }
+
+        /* Tabs de navegación */
+        .tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            padding: 6px;
+            margin-bottom: 25px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 14px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn.active {
+            background: var(--pacman-yellow);
+            color: #000;
+            box-shadow: 0 4px 15px var(--pacman-glow);
+        }
+
+        /* Botón Principal */
+        .generate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--pacman-yellow), #e6b800);
+            color: #000;
+            border: none;
+            padding: 18px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--pacman-glow);
+        }
+
+        .generate-btn:active {
+            transform: translateY(1px);
+        }
+
+        .generate-btn:disabled {
+            background: #2a2a35;
+            color: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Área de Resultados */
+        .output-section {
+            margin-top: 35px;
+            border-radius: 16px;
+            padding: 2px; /* Espacio para el borde gradiente animado */
+            background: transparent;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .output-inner {
+            background: rgba(0,0,0,0.4);
+            border: 1px dashed var(--glass-border);
+            border-radius: 14px;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .output-media {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 10px;
+            display: none;
+            animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .ai-thinking {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Spinner moderno */
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 215, 0, 0.1);
+            border-left-color: var(--pacman-yellow);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .thinking-text {
+            color: var(--pacman-yellow);
+            font-weight: 600;
+            animation: pulseText 1.5s infinite;
+        }
+
+        /* Animaciones */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; text-shadow: 0 0 10px var(--pacman-glow); } }
+        @keyframes pulseText { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+        /* Media Queries para Móviles */
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+                border-radius: 20px;
+            }
+            h1 { font-size: 1.8rem; }
+            .logo-art { font-size: 1.8rem; }
+            .tab-btn { font-size: 0.9rem; padding: 12px; }
+            .generate-btn { font-size: 1rem; padding: 16px; }
+            .output-inner { min-height: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Notificación Flotante -->
+    <div id="toast"><span id="toastIcon"></span> <span id="toastMsg"></span></div>
+
+    <div class="container">
+        <header>
+            <div class="logo-art">ᗧ · · · ᗣ</div>
+            <h1>mrpacman1977 Studio</h1>
+            <p class="subtitle">Tu motor personal de IA para Fotos y Videos</p>
+        </header>
+
+        <div class="input-group">
+            <label for="apiKey">Llave de Acceso (API Key)</label>
+            <input type="password" id="apiKey" placeholder="Pega tu clave secreta de Gemini aquí..." autocomplete="off">
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="setMode('photo')" id="btn-photo">
+                📷 Crear Foto
+            </button>
+            <button class="tab-btn" onclick="setMode('video')" id="btn-video">
+                🎥 Crear Video
+            </button>
+        </div>
+
+        <div class="input-group">
+            <label for="prompt">¿Qué vamos a crear hoy?</label>
+            <textarea id="prompt" placeholder="Ej: Un Pac-Man de neón recorriendo una ciudad cyberpunk bajo la lluvia, hiperrealista, 8k..."></textarea>
+        </div>
+
+        <button class="generate-btn" id="generateBtn" onclick="generateMedia()">
+            <span>Sintetizar Obra</span> ✨
+        </button>
+
+        <div class="output-section">
+            <div class="output-inner" id="outputArea">
+                
+                <!-- Estado de Carga -->
+                <div class="ai-thinking" id="loader">
+                    <div class="spinner"></div>
+                    <p class="thinking-text" id="loadingText">La IA está imaginando...</p>
+                </div>
+
+                <!-- Estado Inicial -->
+                <p id="outputPlaceholder" style="color: var(--text-muted); font-weight: 300;">
+                    El lienzo está en blanco. Introduce tu idea arriba.
+                </p>
+
+                <!-- Resultados -->
+                <img id="resultImage" class="output-media" alt="Imagen generada por IA">
+                <video id="resultVideo" class="output-media" controls autoplay loop muted playsinline></video>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'photo'; 
+
+        // Sistema de notificaciones elegante
+        function showToast(message, type = 'error') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            toastMsg.innerText = message;
+            toastIcon.innerText = type === 'error' ? '⚠️' : '✅';
+            toast.style.borderColor = type === 'error' ? 'var(--error-color)' : 'var(--pacman-yellow)';
+            
+            toast.style.top = '20px'; // Baja a la vista
+            
+            setTimeout(() => {
+                toast.style.top = '-100px'; // Sube y se oculta
+            }, 3500);
+        }
+
+        // Cambiar entre Foto y Video
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // Actualizar botones UI
+            document.getElementById('btn-photo').classList.remove('active');
+            document.getElementById('btn-video').classList.remove('active');
+            document.getElementById(`btn-${mode}`).classList.add('active');
+
+            // Actualizar textos
+            const promptInput = document.getElementById('prompt');
+            if(mode === 'photo') {
+                promptInput.placeholder = "Ej: Un Pac-Man de neón recorriendo una ciudad cyberpunk bajo la lluvia, hiperrealista, 8k...";
+            } else {
+                promptInput.placeholder = "Ej: Animación cinemática de una cámara sobrevolando un paisaje digital retro de los 80s...";
+            }
+
+            // Limpiar área de resultados
+            document.getElementById('resultImage').style.display = 'none';
+            document.getElementById('resultVideo').style.display = 'none';
+            document.getElementById('outputPlaceholder').style.display = 'block';
+            document.getElementById('outputPlaceholder').innerText = "El lienzo está en blanco. Introduce tu idea arriba.";
+        }
+
+        // Textos dinámicos de carga para darle un toque "Hacker/IA"
+        const loadingPhrases = [
+            "Conectando con el servidor neuronal...",
+            "Procesando píxeles cuánticos...",
+            "Inyectando estilo mrpacman1977...",
+            "Renderizando la magia..."
+        ];
+
+        async function generateMedia() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const prompt = document.getElementById('prompt').value.trim();
+            const btn = document.getElementById('generateBtn');
+            const loader = document.getElementById('loader');
+            const loadingText = document.getElementById('loadingText');
+            const placeholder = document.getElementById('outputPlaceholder');
+            const resultImage = document.getElementById('resultImage');
+            const resultVideo = document.getElementById('resultVideo');
+
+            // Validaciones con el nuevo Toast
+            if (!apiKey) {
+                showToast("Falta tu API Key. ¡El estudio está bloqueado!", "error");
+                document.getElementById('apiKey').focus();
+                return;
+            }
+            if (!prompt) {
+                showToast("¡Hey mrpacman! Olvidaste escribir tu idea.", "error");
+                document.getElementById('prompt').focus();
+                return;
+            }
+
+            // Preparar UI para cargar
+            btn.disabled = true;
+            btn.innerHTML = `<span>Procesando...</span> ⏳`;
+            placeholder.style.display = 'none';
+            resultImage.style.display = 'none';
+            resultVideo.style.display = 'none';
+            loader.style.display = 'flex';
+
+            // Ciclo de textos de carga divertidos
+            let phraseIndex = 0;
+            loadingText.innerText = loadingPhrases[0];
+            const interval = setInterval(() => {
+                phraseIndex = (phraseIndex + 1) % loadingPhrases.length;
+                loadingText.innerText = loadingPhrases[phraseIndex];
+            }, 1200);
+
+            /* 
+            ========================================================================
+            LÓGICA REAL DE LA API (Comentada para que puedas integrarla después)
+            ========================================================================
+            try {
+                const response = await fetch('URL_DEL_ENDPOINT_AQUI', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}` // o x-api-key depende del servicio
+                    },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+                const data = await response.json();
+                // Usar data.url para mostrar la imagen/video
+            } catch(e) {
+                showToast("Error conectando con la IA.", "error");
+            }
+            ========================================================================
+            */
+
+            // SIMULACIÓN DE TIEMPO DE ESPERA (4 segundos)
+            setTimeout(() => {
+                clearInterval(interval); // Detener textos de carga
+                loader.style.display = 'none';
+                btn.disabled = false;
+                btn.innerHTML = `<span>Sintetizar Otra Obra</span> ✨`;
+                
+                showToast("¡Creación exitosa!", "success");
+
+                if (currentMode === 'photo') {
+                    // Genera una imagen estilizada aleatoria que parece arte digital
+                    const randomId = Math.floor(Math.random() * 80);
+                    resultImage.src = `https://picsum.photos/id/${randomId}/800/600`;
+                    resultImage.style.display = 'block';
+                } else {
+                    // Video de prueba optimizado para móviles (playsinline está en el HTML)
+                    resultVideo.src = "https://www.w3schools.com/html/mov_bbb.mp4";
+                    resultVideo.style.display = 'block';
+                }
+
+                // Hacer un pequeño scroll hacia el resultado si estamos en móvil
+                if(window.innerWidth <= 600) {
+                    document.querySelector('.output-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+
+            }, 4500);
+        }
+    </script>
+</body>
+</html>
